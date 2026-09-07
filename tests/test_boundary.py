@@ -1,6 +1,6 @@
 import unittest
 
-from ua_rca.boundary import fit_temperature_grid, normalized_entropy, posterior_from_detectors
+from ua_rca.boundary import build_boundary_candidates, fit_temperature_grid, normalized_entropy, posterior_from_detectors
 
 
 class BoundaryTests(unittest.TestCase):
@@ -13,6 +13,14 @@ class BoundaryTests(unittest.TestCase):
         self.assertAlmostEqual(normalized_entropy([1.0]), 0.0)
         temperature = fit_temperature_grid([[0.0, 2.0], [2.0, 0.0]], [1, 0], [0.5, 1.0, 2.0])
         self.assertEqual(temperature, 0.5)
+
+    def test_builds_diverse_probabilistic_candidate_boundaries(self):
+        series = [0.0] * 30 + [5.0] * 30 + [0.0] * 30
+        result = build_boundary_candidates(series, candidate_limit=3, lookback=8, lookahead=8)
+        self.assertGreaterEqual(len(result["candidates"]), 2)
+        self.assertAlmostEqual(sum(result["posterior"]), 1.0)
+        self.assertGreaterEqual(result["entropy"], 0.0)
+        self.assertTrue(all("changepoint" in row["detector_scores"] for row in result["candidates"]))
 
 
 if __name__ == "__main__":
