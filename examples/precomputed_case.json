@@ -1,0 +1,17 @@
+{
+  "case_id": "example-checkout-latency",
+  "windows": [
+    {
+      "start": 1710000000,
+      "detector_scores": {"changepoint": 1.7, "residual": 1.3},
+      "ranking": {"checkout": 0.72, "payment": 0.18, "catalog": 0.10},
+      "quality": 0.92
+    },
+    {
+      "start": 1710000060,
+      "detector_scores": {"changepoint": 2.4, "residual": 2.1},
+      "ranking": {"checkout": 0.83, "payment": 0.11, "catalog": 0.06},
+      "quality": 1.0
+    }
+  ]
+}
