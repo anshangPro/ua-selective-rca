@@ -35,10 +35,17 @@ def main():
     parser.add_argument("--limit-per-system", type=int, default=1)
     parser.add_argument("--systems", nargs="+", choices=("ob", "ss", "tt"), default=("ob", "ss", "tt"))
     parser.add_argument("--offsets", nargs="+", type=int, help="subset of configured offsets")
+    parser.add_argument("--resume", action="store_true", help="reuse completed rows in --output")
     args = parser.parse_args()
     offsets = args.offsets or json.loads((ROOT / "configs" / "re1_template.json").read_text())["offset_seconds"]
     methods = {"BARO": baro, "CIRCA": circa}
-    rows = []
+    existing = json.loads(args.output.read_text()).get("rows", []) if args.resume and args.output.exists() else []
+    rows = list(existing)
+    completed = {(row["case_id"], row["baseline"], row["offset_seconds"]) for row in rows}
+
+    def persist():
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps({"offsets": offsets, "rows": rows}, indent=2))
     all_systems = (("ob", "re1ob", "re1-ob"), ("ss", "re1ss", "re1-ss"), ("tt", "re1tt", "re1-tt"))
     for short_name, prefix, dataset in all_systems:
         if short_name not in args.systems:
@@ -50,6 +57,8 @@ def main():
             onset = int((case / "inject_time.txt").read_text().strip())
             for offset in offsets:
                 for name, method in methods.items():
+                    if (case.name, name, offset) in completed:
+                        continue
                     started = time.perf_counter()
                     try:
                         rank = service_ranking(method(data.copy(), inject_time=onset + offset, dataset=dataset)["ranks"])
@@ -60,13 +69,14 @@ def main():
                         row = {"case_id": case.name, "system": prefix, "baseline": name, "offset_seconds": offset,
                                "elapsed_seconds": round(time.perf_counter() - started, 4), "status": "failed", "error": repr(error)}
                     rows.append(row)
+                    completed.add((case.name, name, offset))
+                    persist()
     ok = [r for r in rows if r["status"] == "ok"]
     summary = {}
     for name in methods:
         summary[name] = {str(offset): {key: sum(r[key] for r in ok if r["baseline"] == name and r["offset_seconds"] == offset) /
             len([r for r in ok if r["baseline"] == name and r["offset_seconds"] == offset]) for key in ("ac_at_1", "ac_at_3", "ac_at_5", "mrr", "avg_at_5")}
             for offset in offsets}
-    args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"offsets": offsets, "rows": rows, "summary": summary}, indent=2))
     print(json.dumps(summary, indent=2))
 
