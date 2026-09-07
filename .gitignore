@@ -6,3 +6,4 @@ artifacts/
 data/
 outputs/
 third_party/
+*.egg-info/

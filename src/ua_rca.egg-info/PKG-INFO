@@ -1,5 +1,0 @@
-Metadata-Version: 2.1
-Name: ua-rca
-Version: 0.1.0
-Summary: Uncertainty-aware selective microservice root-cause analysis
-Requires-Python: >=3.8
