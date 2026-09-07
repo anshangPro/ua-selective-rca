@@ -12,7 +12,12 @@
 - Main accuracy: AC@1/3/5, MRR, Avg@5 by system and baseline.
 - Robustness: mean, worst, variance, and area over boundary offsets.
 - Selective RCA: coverage, selective risk, AURC, Top-k set recall, mean set size, abstention rate, and ECE.
-- Ablation: single boundary, equal windows, posterior only, posterior plus stability, and selective output.
+- Aggregation ablation: run `scripts/run_case.py --ablations` on identical
+  candidate-window rankings.  The output contains `single_boundary`,
+  `equal_window`, `posterior`, `posterior_quality`, `posterior_stability`, and
+  `posterior_quality_stability`; compare the same case split only.  Supply a
+  bounded [0, 1] `quality` per window from the adapter's anomaly strength,
+  sample-sufficiency, and graph-availability checks.
 
 ## GPU protocol
 

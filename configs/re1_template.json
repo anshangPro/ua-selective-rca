@@ -4,6 +4,7 @@
   "seed": 2026,
   "detectors": {"changepoint": {"weight": 1.0}, "residual": {"weight": 1.0}, "temperature": 1.0},
   "windows": {"pre_seconds": 300, "post_seconds": 300, "candidate_limit": 5},
+  "aggregation": {"mode": "posterior_quality_stability", "stability_k": 5},
   "selective": {"top_k_limit": 5, "top1_confidence": 0.60, "top1_margin": 0.15, "min_stability": 0.45, "max_boundary_entropy": 0.90, "set_mass": 0.80, "min_set_confidence": 0.45},
   "baselines": ["CIRCA", "RCD", "BARO"],
   "offset_seconds": [-300, -120, -60, -30, 0, 30, 60, 120, 300],

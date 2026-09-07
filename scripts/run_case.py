@@ -31,6 +31,7 @@ def main() -> None:
     parser.add_argument("--input", required=True, type=Path, help="JSON case with a windows list")
     parser.add_argument("--output", required=True, type=Path, help="auditable result JSON")
     parser.add_argument("--config", type=Path, help="optional experiment configuration JSON")
+    parser.add_argument("--ablations", action="store_true", help="also emit single/equal/posterior/factor ablations")
     args = parser.parse_args()
 
     payload = json.loads(args.input.read_text(encoding="utf-8"))
@@ -42,8 +43,15 @@ def main() -> None:
         CandidateWindow(float(row["start"]), row["detector_scores"], row["ranking"], float(row.get("quality", 1.0)))
         for row in payload["windows"]
     ]
-    pipeline = SelectiveRCAPipeline(selective, float(detector_config.get("temperature", 1.0)), weights)
+    aggregation_config = config_payload.get("aggregation", {})
+    pipeline = SelectiveRCAPipeline(
+        selective, float(detector_config.get("temperature", 1.0)), weights,
+        str(aggregation_config.get("mode", "posterior_quality_stability")),
+        int(aggregation_config.get("stability_k", 5)),
+    )
     decision, audit = pipeline.diagnose(windows)
+    if args.ablations:
+        audit["aggregation_ablations"] = pipeline.diagnose_ablations(windows)
     audit["case_id"] = payload.get("case_id")
     audit["manifest"] = {
         "timestamp_utc": datetime.now(timezone.utc).isoformat(), "python": sys.version,
